@@ -1,0 +1,42 @@
+name: Daily German Word
+
+on:
+  schedule:
+    # Runs at 07:00 AM UTC every day (adjust to your preferred time)
+    - cron: '0 7 * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+permissions:
+  contents: write # Needed to commit and push updated history.json back to repo
+
+jobs:
+  send-word:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run script
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          python script.py
+
+      - name: Commit & push updated history
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action Bot"
+          git add history.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update learned words history [skip ci]" && git push)
