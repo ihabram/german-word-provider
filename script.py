@@ -48,17 +48,32 @@ Respond ONLY with valid JSON matching this exact schema:
 }}
 """
 
-try:
-    response = client.models.generate_content(
-        model="gemini-3.8-flash",
-        contents=prompt,
-        config=types.GenerateContentConfig(
-            response_mime_type="application/json"
+CANDIDATE_MODELS = [
+    "gemini-3.5-flash-lite",
+    "gemini-3.8-flash",
+    "gemini-4-argon",
+]
+
+data = None
+for model_name in CANDIDATE_MODELS:
+    print(f"Attempting generation with '{model_name}'...", flush=True)
+    try:
+        response = client.models.generate_content(
+            model=model_name,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                thinking_config=types.ThinkingConfig(thinking_level="MINIMAL")
+            )
         )
-    )
-    data = json.loads(response.text)
-except Exception as e:
-    sys.exit(f"Failed to generate word or parse JSON from Gemini: {e}")
+        data = json.loads(response.text)
+        print(f"Successfully generated word with '{model_name}'!", flush=True)
+        break
+    except Exception as e:
+        print(f"Model '{model_name}' failed: {e}", flush=True)
+
+if not data:
+    sys.exit("Error: All candidate Gemini models failed.")
 
 # 3. Save new word to history
 history.append(data["word_with_article"])
@@ -102,4 +117,4 @@ payload = {
 res = requests.post(webhook_url, json=payload, timeout=15)
 res.raise_for_status()
 
-print(f"Successfully posted '{data['word_with_article']}' to Discord!")
+print(f"Successfully posted '{data['word_with_article']}' to Discord!", flush=True)
