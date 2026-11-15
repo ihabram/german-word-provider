@@ -2,8 +2,8 @@ name: Daily German Word
 
 on:
   schedule:
-    # Runs at 07:00 AM UTC every day (adjust to your preferred time)
-    - cron: '0 7 * * *'
+    # Runs at 06:23 AM UTC every day (off-peak minute to avoid GitHub Actions runner delays)
+    - cron: '23 6 * * *'
   workflow_dispatch: # Allows manual trigger from GitHub Actions UI
 
 permissions:
